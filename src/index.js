@@ -11,18 +11,62 @@ const users = [];
 
 function checksExistsUserAccount(request, response, next) {
   // Complete aqui
+  const {username} = request.headers;
+  const user = users.find(user => user.username === username);
+  if(user){
+    request.user = user;
+    return next();
+  }else{
+    return response.status(404).json({error: "Usuário ainda não existe no servidor"});
+  }
+
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
   // Complete aqui
+  const{user} = request;
+  const quantityTodos = user.todos.length;
+  const proPlan = user.pro;
+  if(proPlan){
+    return next();
+  }
+  if(quantityTodos < 10){
+    return next();
+  }else{
+    return response.status(403).json({error: "Já existe 10 todos cadastrados"})
+  }
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const {username} = request.headers;
+  const {id} = request.params;
+  const user = users.find(user => user.username === username);
+  if(!user){
+    return response.status(404).json({error: "Não existe usuário"});
+  }
+  const uuid = validate(id);
+  if(!uuid){
+    return response.status(400).json({error: "ID não válido"});
+  }
+  const todo = user.todos.find(todo => todo.id === id);
+  if(!todo){
+    return response.status(404).json({error: "Todo não encontrado"});
+  }
+  request.user = user;
+  request.todo = todo;
+  return next();
+
+  
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const {id} = request.params;
+  const user = users.find(user => user.id === id);
+  if(!user){
+    return response.status(404).json({error: "usuário não encontrado"});
+  }
+  request.user = user;
+  return next();
 }
 
 app.post('/users', (request, response) => {
